@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD迭代管理卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            background: rgba(40, 40, 60, 0.95);
+            padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .title {
+            font-size: clamp(14px, 2.5vw, 20px);
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 1.5vw, 10px);
+        }
+
+        .title::before {
+            content: "🔄";
+            font-size: clamp(16px, 2.8vw, 22px);
+        }
+
+        .content {
+            flex: 1;
+            padding: clamp(12px, 3vw, 20px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 3vw, 20px);
+            overflow-y: auto;
+        }
+
+        .iteration-info {
+            background: rgba(50, 50, 70, 0.6);
+            padding: clamp(10px, 2.5vw, 16px);
+            border-radius: 8px;
+            border-left: 4px solid #4cc9f0;
+        }
+
+        .iteration-name {
+            font-size: clamp(14px, 2.2vw, 18px);
+            font-weight: 600;
+            margin-bottom: clamp(4px, 1vw, 8px);
+            color: #4cc9f0;
+        }
+
+        .iteration-dates {
+            font-size: clamp(12px, 1.8vw, 14px);
+            color: #a0a0c0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-section {
+            background: rgba(50, 50, 70, 0.6);
+            padding: clamp(10px, 2.5vw, 16px);
+            border-radius: 8px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: clamp(8px, 2vw, 12px);
+        }
+
+        .progress-title {
+            font-size: clamp(13px, 2vw, 16px);
+            font-weight: 500;
+        }
+
+        .progress-percent {
+            font-size: clamp(14px, 2.2vw, 18px);
+            font-weight: 600;
+            color: #4cc9f0;
+        }
+
+        .progress-bar {
+            height: clamp(8px, 1.8vw, 12px);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+            border-radius: 6px;
+            width: 65%;
+            transition: width 0.5s ease;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: clamp(10px, 2vw, 14px);
+            margin-top: clamp(8px, 2vw, 12px);
+        }
+
+        .status-item {
+            background: rgba(50, 50, 70, 0.6);
+            padding: clamp(10px, 2vw, 14px);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .status-icon {
+            font-size: clamp(20px, 4vw, 28px);
+            margin-bottom: clamp(6px, 1.5vw, 10px);
+        }
+
+        .status-title {
+            font-size: clamp(12px, 1.8vw, 14px);
+            margin-bottom: clamp(4px, 1vw, 6px);
+            color: #a0a0c0;
+        }
+
+        .status-value {
+            font-size: clamp(14px, 2.2vw, 18px);
+            font-weight: 600;
+        }
+
+        .status-build .status-icon { color: #4ade80; }
+        .status-test .status-icon { color: #f59e0b; }
+        .status-deploy .status-icon { color: #8b5cf6; }
+
+        .status-build .status-value { color: #4ade80; }
+        .status-test .status-value { color: #f59e0b; }
+        .status-deploy .status-value { color: #8b5cf6; }
+
+        .footer {
+            padding: clamp(8px, 2vw, 12px);
+            text-align: center;
+            font-size: clamp(11px, 1.6vw, 13px);
+            color: #8080a0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(40, 40, 60, 0.8);
+        }
+
+        .time-update {
+            display: inline-block;
+            margin-left: 8px;
+            color: #4cc9f0;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 200px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 滚动条样式 */
+        .content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: rgba(100, 100, 150, 0.5);
+            border-radius: 3px;
+        }
+
+        .content::-webkit-scrollbar-thumb:hover {
+            background: rgba(120, 120, 170, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="title">CI/CD迭代管理</div>
+        </div>
+
+        <div class="content">
+            <div class="iteration-info">
+                <div class="iteration-name">Sprint #24: 用户认证优化</div>
+                <div class="iteration-dates">
+                    <span>开始: 2026-04-01</span>
+                    <span>结束: 2026-04-14</span>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <div class="progress-title">迭代进度</div>
+                    <div class="progress-percent">65%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-item status-build">
+                    <div class="status-icon">✅</div>
+                    <div class="status-title">构建状态</div>
+                    <div class="status-value" id="buildStatus">成功</div>
+                </div>
+
+                <div class="status-item status-test">
+                    <div class="status-icon">🧪</div>
+                    <div class="status-title">测试通过率</div>
+                    <div class="status-value" id="testRate">94%</div>
+                </div>
+
+                <div class="status-item status-deploy">
+                    <div class="status-icon">🚀</div>
+                    <div class="status-title">部署状态</div>
+                    <div class="status-value" id="deployStatus">生产中</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            最后更新: <span id="lastUpdateTime">刚刚</span>
+            <span class="time-update" id="timeAgo">(0秒前)</span>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据更新
+        const statusData = {
+            build: ['成功', '进行中', '失败'],
+            test: ['94%', '96%', '92%', '95%'],
+            deploy: ['生产中', '预发布', '测试中', '已回滚']
+        };
+
+        let lastUpdateTime = new Date();
+        const lastUpdateElement = document.getElementById('lastUpdateTime');
+        const timeAgoElement = document.getElementById('timeAgo');
+        const progressFill = document.getElementById('progressFill');
+        const buildStatusElement = document.getElementById('buildStatus');
+        const testRateElement = document.getElementById('testRate');
+        const deployStatusElement = document.getElementById('deployStatus');
+
+        // 格式化时间
+        function formatTime(date) {
+            return date.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // 计算时间差
+        function timeAgo(timestamp) {
+            const now = new Date();
+            const diffMs = now - timestamp;
+            const diffSec = Math.floor(diffMs / 1000);
+
+            if (diffSec < 60) {
+                return `(${diffSec}秒前)`;
+            } else if (diffSec < 3600) {
+                return `(${Math.floor(diffSec / 60)}分钟前)`;
+            } else {
+                return `(${Math.floor(diffSec / 3600)}小时前)`;
+            }
+        }
+
+        // 更新进度条动画
+        function updateProgressBar() {
+            const currentWidth = progressFill.style.width;
+            const currentPercent = parseInt(currentWidth) || 65;
+            let newPercent = currentPercent;
+
+            // 随机变化进度（模拟真实场景）
+            if (Math.random() > 0.7) {
+                const change = Math.floor(Math.random() * 5) - 2; // -2到+2的变化
+                newPercent = Math.max(50, Math.min(85, currentPercent + change));
+                progressFill.style.width = `${newPercent}%`;
+                document.querySelector('.progress-percent').textContent = `${newPercent}%`;
+            }
+        }
+
+        // 随机更新状态
+        function updateRandomStatus() {
+            if (Math.random() > 0.6) {
+                const randomBuild = statusData.build[Math.floor(Math.random() * statusData.build.length)];
+                buildStatusElement.textContent = randomBuild;
+
+                // 根据状态改变颜色
+                if (randomBuild === '成功') {
+                    buildStatusElement.style.color = '#4ade80';
+                } else if (randomBuild === '进行中') {
+                    buildStatusElement.style.color = '#f59e0b';
+                } else {
+                    buildStatusElement.style.color = '#ef4444';
+                }
+            }
+
+            if (Math.random() > 0.6) {
+                const randomTest = statusData.test[Math.floor(Math.random() * statusData.test.length)];
+                testRateElement.textContent = randomTest;
+            }
+
+            if (Math.random() > 0.6) {
+                const randomDeploy = statusData.deploy[Math.floor(Math.random() * statusData.deploy.length)];
+                deployStatusElement.textContent = randomDeploy;
+
+                // 根据部署状态改变颜色
+                if (randomDeploy === '生产中') {
+                    deployStatusElement.style.color = '#8b5cf6';
+                } else if (randomDeploy === '预发布') {
+                    deployStatusElement.style.color = '#3b82f6';
+                } else if (randomDeploy === '测试中') {
+                    deployStatusElement.style.color = '#f59e0b';
+                } else {
+                    deployStatusElement.style.color = '#ef4444';
+                }
+            }
+
+            // 更新最后更新时间
+            lastUpdateTime = new Date();
+            lastUpdateElement.textContent = formatTime(lastUpdateTime);
+        }
+
+        // 更新时间显示
+        function updateTimeDisplay() {
+            timeAgoElement.textContent = timeAgo(lastUpdateTime);
+        }
+
+        // 初始化
+        function init() {
+            lastUpdateElement.textContent = formatTime(lastUpdateTime);
+            updateTimeDisplay();
+
+            // 设置初始进度条宽度
+            progressFill.style.width = '65%';
+
+            // 设置定时器
+            setInterval(() => {
+                updateProgressBar();
+                updateRandomStatus();
+                updateTimeDisplay();
+            }, 5000); // 每5秒更新一次
+
+            // 更频繁地更新时间显示
+            setInterval(updateTimeDisplay, 1000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 清理定时器（在iframe卸载时）
+        window.addEventListener('beforeunload', () => {
+            // 实际清理由浏览器自动处理，这里只是占位
+            console.log('卡片正在卸载');
+        });
+    </script>
+</body>
+</html>

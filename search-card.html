@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 16px;
+    color: #1d1d1f;
+    background: #ffffff;
+  }
+
+  .card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(8px, 2vh, 16px);
+  }
+
+  /* 搜索引擎选择 */
+  .engines {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+  }
+
+  .engine-btn {
+    width: clamp(28px, 7vw, 40px);
+    height: clamp(28px, 7vw, 40px);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: #f5f5f7;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(12px, 3vw, 16px);
+    font-weight: 600;
+    transition: all 0.15s;
+    position: relative;
+    color: #86868b;
+  }
+
+  .engine-btn:hover {
+    background: #e8e8ed;
+  }
+
+  .engine-btn.active {
+    border-color: currentColor;
+    background: #f0f0f5;
+  }
+
+  .engine-btn .icon {
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+  }
+
+  /* 搜索框 */
+  .search-box {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+    height: clamp(32px, 7vh, 40px);
+  }
+
+  .search-box input {
+    flex: 1;
+    border: 1px solid #e5e5ea;
+    border-radius: 10px;
+    padding: 0 clamp(8px, 2vw, 14px);
+    font-size: clamp(12px, 3vw, 15px);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: #f9f9fb;
+    color: #1d1d1f;
+  }
+
+  .search-box input:focus {
+    border-color: #007aff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+  }
+
+  .search-box input::placeholder {
+    color: #c7c7cc;
+  }
+
+  .search-btn {
+    width: clamp(32px, 7vh, 40px);
+    height: 100%;
+    border: none;
+    background: #007aff;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+
+  .search-btn:hover {
+    background: #0056cc;
+  }
+
+  .search-btn:active {
+    background: #003d99;
+  }
+
+  .search-btn svg {
+    width: 50%;
+    height: 50%;
+  }
+
+  /* 引擎名称提示 */
+  .engine-label {
+    font-size: clamp(12px, 2.5vw, 13px);
+    color: #86868b;
+    text-align: center;
+  }
+
+  /* 热搜/快捷标签（大尺寸才显示） */
+  .shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(4px, 1vw, 6px);
+    width: 100%;
+  }
+
+  .shortcut-tag {
+    padding: clamp(2px, 0.5vh, 4px) clamp(6px, 1.5vw, 10px);
+    background: #f5f5f7;
+    border-radius: 6px;
+    font-size: clamp(11px, 2.2vw, 13px);
+    color: #636366;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .shortcut-tag:hover {
+    background: #e8e8ed;
+    color: #1d1d1f;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="engines" id="engines"></div>
+    <div class="engine-label" id="engineLabel"></div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索…">
+      <button class="search-btn" id="searchBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+    </div>
+    <div class="shortcuts" id="shortcuts"></div>
+  </div>
+
+<script>
+  const ENGINES = [
+    { id: 'google',   name: 'Google',   color: '#4285f4', url: 'https://www.google.com/search?q=',     letter: 'G' },
+    { id: 'baidu',    name: '百度',      color: '#2932e1', url: 'https://www.baidu.com/s?wd=',           letter: '百' },
+    { id: 'bing',     name: 'Bing',      color: '#00897b', url: 'https://www.bing.com/search?q=',        letter: 'B' },
+    { id: 'sogou',    name: '搜狗',      color: '#fb6022', url: 'https://www.sogou.com/web?query=',      letter: '搜' },
+    { id: 'duckduckgo', name: 'DuckDuckGo', color: '#de5833', url: 'https://duckduckgo.com/?q=',       letter: 'D' },
+    { id: 'github',   name: 'GitHub',    color: '#24292e', url: 'https://github.com/search?q=',          letter: 'H' },
+  ];
+
+  const SHORTCUTS = ['前端', 'AI', '科技', '设计', '开源', '热榜'];
+
+  const STORAGE_KEY = 'etab_search_engine';
+  let currentEngine = ENGINES[0];
+
+  function loadEngine() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const found = ENGINES.find(e => e.id === saved);
+        if (found) currentEngine = found;
+      }
+    } catch {}
+  }
+
+  function saveEngine() {
+    try { localStorage.setItem(STORAGE_KEY, currentEngine.id); } catch {}
+  }
+
+  function renderEngines() {
+    const container = document.getElementById('engines');
+    container.innerHTML = ENGINES.map(e => `
+      <div class="engine-btn${e.id === currentEngine.id ? ' active' : ''}" data-id="${e.id}" style="color:${e.color}" title="${e.name}">
+        ${e.letter}
+      </div>
+    `).join('');
+
+    document.getElementById('engineLabel').textContent = currentEngine.name;
+    document.getElementById('searchInput').placeholder = currentEngine.name + ' 搜索…';
+  }
+
+  function renderShortcuts() {
+    const container = document.getElementById('shortcuts');
+    container.innerHTML = SHORTCUTS.map(s => `
+      <span class="shortcut-tag" data-query="${s}">${s}</span>
+    `).join('');
+  }
+
+  function doSearch(query) {
+    const q = query || document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    window.open(currentEngine.url + encodeURIComponent(q), '_blank');
+  }
+
+  // 切换引擎
+  document.getElementById('engines').addEventListener('click', e => {
+    const btn = e.target.closest('.engine-btn');
+    if (!btn) return;
+    const engine = ENGINES.find(eng => eng.id === btn.dataset.id);
+    if (!engine) return;
+    currentEngine = engine;
+    saveEngine();
+    renderEngines();
+    document.getElementById('searchInput').focus();
+  });
+
+  // 搜索按钮
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    doSearch();
+  });
+
+  // 回车搜索
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // 快捷标签
+  document.getElementById('shortcuts').addEventListener('click', e => {
+    const tag = e.target.closest('.shortcut-tag');
+    if (!tag) return;
+    const query = tag.dataset.query;
+    document.getElementById('searchInput').value = query;
+    doSearch(query);
+  });
+
+  // 初始化
+  loadEngine();
+  renderEngines();
+  renderShortcuts();
+</script>
+</body>
+</html>

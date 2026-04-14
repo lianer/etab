@@ -1,0 +1,236 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-overlay);
+}
+
+.dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  width: 980px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--color-text);
+}
+
+.closeIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.closeIconBtn:hover {
+  background-color: var(--color-border-light);
+  color: var(--color-text);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: var(--spacing-sm);
+}
+
+.tab {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.activeTab {
+  color: var(--color-primary);
+  background-color: var(--color-drag-overlay);
+  font-weight: 600;
+}
+
+/* 卡片市场 - 宫格布局 */
+.presetGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 100px);
+  gap: 20px;
+  padding: 0 20px;
+}
+
+/* 卡片元素 */
+.presetCard {
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.presetCard:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-drag);
+}
+
+.presetCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 卡片图片区域 */
+.cardImage {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--color-bg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardImageFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-drag-overlay);
+}
+
+.cardImage img:not([style*="display: none"]) ~ .cardImageFallback {
+  display: none;
+}
+
+.cardLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  color: var(--color-primary);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* 卡片信息 */
+.cardInfo {
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cardAuthor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardCount {
+  flex-shrink: 0;
+}
+
+.customEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.codeArea {
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  font-family: source-code-pro, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  background: #fafafa;
+  color: var(--color-text);
+}
+
+.codeArea:focus {
+  border-color: var(--color-primary);
+}
+
+.createCustomBtn {
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color var(--transition-fast);
+}
+
+.createCustomBtn:hover {
+  background-color: var(--color-primary-hover);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

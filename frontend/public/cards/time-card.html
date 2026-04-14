@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: transparent;
+    color: #1a1a1a;
+  }
+
+  .clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, 1.5vmin, 10px);
+  }
+
+  .time-row {
+    display: flex;
+    align-items: baseline;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hm {
+    font-size: clamp(1.8rem, 12vmin, 7rem);
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .sec {
+    font-size: clamp(1.8rem, 12vmin, 7rem);
+    font-weight: 300;
+    opacity: 0.4;
+    margin-left: 0.05em;
+  }
+
+  .colon {
+    animation: blink 2s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .date {
+    font-size: clamp(0.83rem, 4.2vmin, 1.65rem);
+    font-weight: 400;
+    opacity: 0.45;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+  <div class="clock">
+    <div class="time-row">
+      <span class="hm" id="hm"></span><span class="sec" id="sec"></span>
+    </div>
+    <div class="date" id="date"></div>
+  </div>
+
+  <script>
+    const hmEl = document.getElementById('hm');
+    const secEl = document.getElementById('sec');
+    const dateEl = document.getElementById('date');
+    let timer = null;
+
+    const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function update() {
+      const now = new Date();
+      hmEl.innerHTML = pad(now.getHours()) + '<span class="colon">:</span>' + pad(now.getMinutes());
+      secEl.textContent = ':' + pad(now.getSeconds());
+      dateEl.textContent = (now.getMonth()+1) + '月' + now.getDate() + '日 ' + weekdays[now.getDay()];
+    }
+
+    update();
+    timer = setInterval(update, 1000);
+
+    window.addEventListener('unload', () => { clearInterval(timer); });
+  </script>
+</body>
+</html>

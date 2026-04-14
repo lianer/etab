@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生日倒计时</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #5a3e2b;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: clamp(6px, 2vmin, 20px);
+    text-align: center;
+    gap: clamp(4px, 1.5vmin, 14px);
+  }
+
+  .cake {
+    font-size: clamp(40px, 16vmin, 112px);
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+
+  .label {
+    font-size: clamp(18px, 6vmin, 44px);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #8b5e3c;
+  }
+
+  .countdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, 1vmin, 8px);
+  }
+
+  .unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1px, 0.5vmin, 4px);
+  }
+
+  .number {
+    font-size: clamp(32px, 14vmin, 104px);
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: #d4513b;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  .unit-label {
+    font-size: clamp(14px, 3.6vmin, 26px);
+    font-weight: 500;
+    color: #a0785c;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .separator {
+    font-size: clamp(24px, 10vmin, 72px);
+    font-weight: 700;
+    color: #d4513b;
+    align-self: flex-start;
+    padding-top: clamp(2px, 0.8vmin, 6px);
+    opacity: 0.5;
+  }
+
+  .date-info {
+    font-size: clamp(16px, 4.4vmin, 32px);
+    font-weight: 500;
+    color: #a0785c;
+    opacity: 0.8;
+  }
+
+  .birthday-today {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(4px, 1.5vmin, 12px);
+  }
+
+  .birthday-today .cake {
+    animation: bounce 1s ease infinite alternate;
+  }
+
+  .birthday-today .greeting {
+    font-size: clamp(28px, 10vmin, 72px);
+    font-weight: 800;
+    color: #d4513b;
+  }
+
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(clamp(-3px, -1vmin, -10px)); }
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="countdownView">
+    <div class="cake">🎂</div>
+    <div class="label">距离生日还有</div>
+    <div class="countdown">
+      <div class="unit">
+        <span class="number" id="days">--</span>
+        <span class="unit-label">天</span>
+      </div>
+      <span class="separator">:</span>
+      <div class="unit">
+        <span class="number" id="hours">--</span>
+        <span class="unit-label">时</span>
+      </div>
+      <span class="separator">:</span>
+      <div class="unit">
+        <span class="number" id="minutes">--</span>
+        <span class="unit-label">分</span>
+      </div>
+      <span class="separator">:</span>
+      <div class="unit">
+        <span class="number" id="seconds">--</span>
+        <span class="unit-label">秒</span>
+      </div>
+    </div>
+    <div class="date-info">10月01日</div>
+  </div>
+
+  <div class="birthday-today" id="birthdayView">
+    <div class="cake">🎂</div>
+    <div class="greeting">生日快乐！</div>
+    <div class="date-info">10月01日</div>
+  </div>
+
+<script>
+  const BIRTHDAY_MONTH = 10;
+  const BIRTHDAY_DAY = 1;
+
+  const daysEl = document.getElementById('days');
+  const hoursEl = document.getElementById('hours');
+  const minutesEl = document.getElementById('minutes');
+  const secondsEl = document.getElementById('seconds');
+  const countdownView = document.getElementById('countdownView');
+  const birthdayView = document.getElementById('birthdayView');
+
+  function getNextBirthday() {
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    let birthday = new Date(thisYear, BIRTHDAY_MONTH - 1, BIRTHDAY_DAY, 0, 0, 0, 0);
+
+    // 如果今天就是生日
+    if (now.getMonth() === BIRTHDAY_MONTH - 1 && now.getDate() === BIRTHDAY_DAY) {
+      return null; // 今天就是生日
+    }
+
+    // 如果今年生日已过，倒计时到明年
+    if (birthday <= now) {
+      birthday = new Date(thisYear + 1, BIRTHDAY_MONTH - 1, BIRTHDAY_DAY, 0, 0, 0, 0);
+    }
+
+    return birthday;
+  }
+
+  function pad(n) {
+    return n < 10 ? '0' + n : String(n);
+  }
+
+  function update() {
+    const nextBirthday = getNextBirthday();
+
+    if (nextBirthday === null) {
+      countdownView.style.display = 'none';
+      birthdayView.style.display = 'flex';
+      return;
+    }
+
+    countdownView.style.display = 'flex';
+    birthdayView.style.display = 'none';
+
+    const now = new Date();
+    const diff = nextBirthday.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      daysEl.textContent = '00';
+      hoursEl.textContent = '00';
+      minutesEl.textContent = '00';
+      secondsEl.textContent = '00';
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    daysEl.textContent = pad(days);
+    hoursEl.textContent = pad(hours);
+    minutesEl.textContent = pad(minutes);
+    secondsEl.textContent = pad(seconds);
+  }
+
+  update();
+  const timer = setInterval(update, 1000);
+
+  window.addEventListener('beforeunload', function() {
+    clearInterval(timer);
+  });
+</script>
+</body>
+</html>

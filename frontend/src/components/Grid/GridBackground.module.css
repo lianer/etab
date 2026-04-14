@@ -1,0 +1,32 @@
+.gridBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: var(--z-grid);
+}
+
+.gridLineVertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--color-grid-line);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.gridLineHorizontal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--color-grid-line);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.visible .gridLineVertical,
+.visible .gridLineHorizontal {
+  opacity: 1;
+}

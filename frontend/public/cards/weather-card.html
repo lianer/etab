@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family:
+          'SF Pro Display',
+          -apple-system,
+          'Helvetica Neue',
+          sans-serif;
+        color: #fff;
+      }
+
+      .weather-card {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: clamp(12px, 3vw, 20px);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        transition: background 1s ease;
+      }
+
+      /* 天气背景主题 */
+      .weather-card.sunny {
+        background: linear-gradient(
+          135deg,
+          #f5af19 0%,
+          #f12711 40%,
+          #c471ed 100%
+        );
+      }
+      .weather-card.cloudy {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .weather-card.rainy {
+        background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+      }
+      .weather-card.snowy {
+        background: linear-gradient(135deg, #e6dada 0%, #274046 100%);
+      }
+      .weather-card.night {
+        background: linear-gradient(
+          135deg,
+          #0f0c29 0%,
+          #302b63 50%,
+          #24243e 100%
+        );
+      }
+
+      /* 装饰光斑 */
+      .weather-card::before {
+        content: '';
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        top: -30px;
+        right: -20px;
+        filter: blur(30px);
+      }
+      .weather-card::after {
+        content: '';
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        bottom: 20px;
+        left: -10px;
+        filter: blur(20px);
+      }
+
+      /* 顶部：城市 + 时间 */
+      .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .location {
+        font-size: clamp(12px, 2.5vw, 16px);
+        font-weight: 500;
+        opacity: 0.9;
+        letter-spacing: 0.5px;
+      }
+      .location-sub {
+        font-size: clamp(9px, 1.8vw, 11px);
+        opacity: 0.5;
+        margin-top: 2px;
+      }
+
+      .current-time {
+        font-size: clamp(10px, 2vw, 13px);
+        opacity: 0.6;
+        text-align: right;
+        line-height: 1.4;
+      }
+
+      /* 中间主区域 */
+      .main-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+        padding: 0 clamp(4px, 1vw, 10px);
+      }
+
+      .temp-section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .weather-icon {
+        font-size: clamp(36px, 10vw, 64px);
+        line-height: 1;
+        margin-bottom: clamp(2px, 0.5vh, 6px);
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+      }
+
+      .weather-desc {
+        font-size: clamp(11px, 2.2vw, 15px);
+        opacity: 0.85;
+        margin-bottom: clamp(2px, 0.5vh, 4px);
+        font-weight: 400;
+      }
+
+      .temp-range {
+        font-size: clamp(9px, 1.8vw, 12px);
+        opacity: 0.5;
+      }
+
+      .temp-big {
+        font-size: clamp(48px, 14vw, 88px);
+        font-weight: 200;
+        line-height: 1;
+        letter-spacing: -2px;
+      }
+      .temp-big .degree {
+        font-size: 0.4em;
+        vertical-align: super;
+        opacity: 0.6;
+      }
+
+      /* 底部信息条 */
+      .bottom-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+        padding-top: clamp(6px, 1.5vh, 12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+      }
+
+      .info-icon {
+        font-size: clamp(12px, 2.5vw, 18px);
+        margin-bottom: 1px;
+      }
+
+      .info-label {
+        font-size: clamp(8px, 1.5vw, 10px);
+        opacity: 0.4;
+        letter-spacing: 0.5px;
+      }
+
+      .info-value {
+        font-size: clamp(10px, 2vw, 14px);
+        font-weight: 500;
+        opacity: 0.85;
+      }
+
+      /* 未来天气小条 */
+      .forecast-row {
+        display: flex;
+        justify-content: space-between;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+        margin-top: clamp(6px, 1.5vh, 10px);
+      }
+
+      .forecast-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        flex: 1;
+      }
+
+      .forecast-day {
+        font-size: clamp(8px, 1.5vw, 10px);
+        opacity: 0.4;
+      }
+
+      .forecast-icon {
+        font-size: clamp(14px, 3vw, 20px);
+        line-height: 1.2;
+      }
+
+      .forecast-temp {
+        font-size: clamp(9px, 1.8vw, 12px);
+        opacity: 0.7;
+        font-weight: 500;
+      }
+
+      /* 动画 */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+      .weather-icon {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          opacity: 0.05;
+        }
+        50% {
+          opacity: 0.12;
+        }
+        100% {
+          opacity: 0.05;
+        }
+      }
+      .weather-card::before {
+        animation: shimmer 4s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="weather-card" id="weatherCard">
+      <div class="top-row">
+        <div>
+          <div class="location" id="city">上海</div>
+          <div class="location-sub" id="citySub">中国 · 华东</div>
+        </div>
+        <div class="current-time" id="currentTime">--:--<br />--月--日</div>
+      </div>
+
+      <div class="main-area">
+        <div class="temp-section">
+          <div class="weather-icon" id="weatherIcon">☀️</div>
+          <div class="weather-desc" id="weatherDesc">晴</div>
+          <div class="temp-range" id="tempRange">↓ 18° ↑ 26°</div>
+        </div>
+        <div class="temp-big" id="tempBig">24<span class="degree">°</span></div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="info-item">
+          <span class="info-icon">💧</span>
+          <span class="info-label">湿度</span>
+          <span class="info-value" id="humidity">62%</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🌬️</span>
+          <span class="info-label">风力</span>
+          <span class="info-value" id="wind">东南 3级</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🌡️</span>
+          <span class="info-label">体感</span>
+          <span class="info-value" id="feelsLike">25°</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">☀️</span>
+          <span class="info-label">紫外线</span>
+          <span class="info-value" id="uv">中等</span>
+        </div>
+      </div>
+
+      <div class="forecast-row" id="forecastRow"></div>
+    </div>
+
+    <script>
+      // 模拟天气数据（实际使用时可替换为API）
+      const weatherData = {
+        sunny: {
+          icon: '☀️',
+          desc: '晴',
+          theme: 'sunny',
+          wind: '东南 2级',
+          uv: '强',
+        },
+        cloudy: {
+          icon: '⛅',
+          desc: '多云',
+          theme: 'cloudy',
+          wind: '东风 3级',
+          uv: '中等',
+        },
+        overcast: {
+          icon: '☁️',
+          desc: '阴',
+          theme: 'cloudy',
+          wind: '北风 2级',
+          uv: '弱',
+        },
+        rainy: {
+          icon: '🌧️',
+          desc: '小雨',
+          theme: 'rainy',
+          wind: '东北 3级',
+          uv: '弱',
+        },
+        snowy: {
+          icon: '❄️',
+          desc: '小雪',
+          theme: 'snowy',
+          wind: '北风 4级',
+          uv: '弱',
+        },
+        night: {
+          icon: '🌙',
+          desc: '晴(夜)',
+          theme: 'night',
+          wind: '微风',
+          uv: '无',
+        },
+      };
+
+      // 根据时间自动选择天气主题
+      function getAutoWeather() {
+        const h = new Date().getHours();
+        if (h >= 19 || h < 6) return weatherData.night;
+        // 简单模拟：根据日期选天气
+        const day = new Date().getDate();
+        const types = [
+          weatherData.sunny,
+          weatherData.cloudy,
+          weatherData.rainy,
+          weatherData.sunny,
+          weatherData.overcast,
+          weatherData.cloudy,
+          weatherData.sunny,
+        ];
+        return types[day % types.length];
+      }
+
+      // 未来几天预报
+      function getForecast() {
+        const days = ['今天', '明天', '后天'];
+        const allWeather = [
+          weatherData.sunny,
+          weatherData.cloudy,
+          weatherData.rainy,
+          weatherData.overcast,
+          weatherData.sunny,
+        ];
+        const base = new Date().getDate();
+        const forecast = [];
+        for (let i = 0; i < 3; i++) {
+          const w = allWeather[(base + i) % allWeather.length];
+          const hi = 20 + Math.floor(Math.random() * 8);
+          const lo = hi - 5 - Math.floor(Math.random() * 5);
+          forecast.push({ day: days[i], icon: w.icon, temp: `${lo}°/${hi}°` });
+        }
+        return forecast;
+      }
+
+      function pad(n) {
+        return n.toString().padStart(2, '0');
+      }
+
+      function renderWeather() {
+        const now = new Date();
+        const h = now.getHours();
+        const m = now.getMinutes();
+
+        // 时间
+        document.getElementById('currentTime').innerHTML =
+          `${pad(h)}:${pad(m)}<br>${now.getMonth() + 1}月${now.getDate()}日`;
+
+        // 天气
+        const w = getAutoWeather();
+        const card = document.getElementById('weatherCard');
+        card.className = 'weather-card ' + w.theme;
+
+        document.getElementById('weatherIcon').textContent = w.icon;
+        document.getElementById('weatherDesc').textContent = w.desc;
+        document.getElementById('wind').textContent = w.wind;
+        document.getElementById('uv').textContent = w.uv;
+
+        // 温度（模拟）
+        const baseTemp =
+          h >= 12 && h <= 15
+            ? 26
+            : h >= 6 && h <= 11
+              ? 22
+              : h >= 16 && h <= 18
+                ? 24
+                : 19;
+        const temp = baseTemp + Math.floor(Math.random() * 3);
+        const lo = temp - 6 - Math.floor(Math.random() * 3);
+        const hi = temp + 2 + Math.floor(Math.random() * 2);
+        const feels = temp + (Math.random() > 0.5 ? 1 : -1);
+
+        document.getElementById('tempBig').innerHTML =
+          `${temp}<span class="degree">°</span>`;
+        document.getElementById('tempRange').textContent = `↓ ${lo}°  ↑ ${hi}°`;
+        document.getElementById('feelsLike').textContent = `${feels}°`;
+        document.getElementById('humidity').textContent =
+          `${50 + Math.floor(Math.random() * 30)}%`;
+
+        // 预报
+        const forecast = getForecast();
+        const row = document.getElementById('forecastRow');
+        row.innerHTML = forecast
+          .map(
+            (f) => `
+        <div class="forecast-item">
+          <span class="forecast-day">${f.day}</span>
+          <span class="forecast-icon">${f.icon}</span>
+          <span class="forecast-temp">${f.temp}</span>
+        </div>
+      `,
+          )
+          .join('');
+      }
+
+      renderWeather();
+      const timer = setInterval(renderWeather, 60000);
+
+      window.addEventListener('beforeunload', () => clearInterval(timer));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    user-select: none;
+  }
+
+  .calendar {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: min(3vw, 3vh);
+    padding-top: min(5vw, 5vh);
+  }
+
+  /* 月份导航 */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: min(1.5vw, 1.5vh);
+    flex-shrink: 0;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: min(7vw, 7vh);
+    color: #555;
+    width: min(12vw, 12vh);
+    height: min(12vw, 12vh);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: #f0f0f0;
+    color: #1a73e8;
+  }
+
+  .month-label {
+    font-size: min(7vw, 7vh);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #1a1a2e;
+  }
+
+  .today-btn {
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: min(1.5vw, 1.5vh);
+    padding: min(0.5vw, 0.5vh) min(1.5vw, 1.5vh);
+    font-size: min(3vw, 3vh);
+    color: #1a73e8;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    font-weight: 500;
+  }
+
+  .today-btn:hover {
+    background: #eef4fd;
+    border-color: #1a73e8;
+  }
+
+  /* 星期标头 */
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex-shrink: 0;
+    padding-bottom: min(0.8vw, 0.8vh);
+  }
+
+  .weekday {
+    text-align: center;
+    font-size: min(4vw, 4vh);
+    font-weight: 600;
+    color: #888;
+    line-height: min(6vw, 6vh);
+  }
+
+  .weekday:first-child,
+  .weekday:last-child {
+    color: #c0c0c0;
+  }
+
+  /* 日期网格 */
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    flex: 1;
+    align-content: start;
+  }
+
+  .day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: min(5vw, 5vh);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+
+  .day.other-month {
+    color: #d0d0d0;
+  }
+
+  .day.other-month:hover {
+    background: #f8f8f8;
+  }
+
+  .day.today {
+    background: #1a73e8;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .day.selected:not(.today) {
+    background: #eef4fd;
+    color: #1a73e8;
+    font-weight: 600;
+  }
+
+  .day.weekend:not(.today):not(.selected):not(.other-month) {
+    color: #b0b0b0;
+  }
+
+  .day:not(.today):not(.other-month):hover {
+    background: #f0f0f0;
+  }
+</style>
+</head>
+<body>
+<div class="calendar">
+  <div class="nav">
+    <button class="nav-btn" id="prev">&#8249;</button>
+    <span class="month-label" id="label"></span>
+    <button class="today-btn" id="todayBtn">今天</button>
+    <button class="nav-btn" id="next">&#8250;</button>
+  </div>
+  <div class="weekdays" id="weekdays"></div>
+  <div class="days" id="days"></div>
+</div>
+
+<script>
+  const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
+  const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = now.getMonth();
+  let selectedKey = null; // 'YYYY-M-D' format
+
+  const labelEl = document.getElementById('label');
+  const daysEl = document.getElementById('days');
+  const weekdaysEl = document.getElementById('weekdays');
+
+  function dateKey(y, m, d) {
+    return `${y}-${m}-${d}`;
+  }
+
+  // 渲染星期标头（只执行一次）
+  function renderWeekdays() {
+    weekdaysEl.innerHTML = '';
+    WEEKDAYS.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'weekday';
+      el.textContent = d;
+      weekdaysEl.appendChild(el);
+    });
+  }
+
+  // 渲染日历
+  function render() {
+    labelEl.textContent = `${year}年 ${MONTHS[month]}`;
+    daysEl.innerHTML = '';
+
+    const firstDay = new Date(year, month, 1);
+    // 转为周一起算：0=周一 ... 6=周日
+    let startWeekday = firstDay.getDay() - 1;
+    if (startWeekday < 0) startWeekday = 6;
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    const todayDate = now.getDate();
+    const todayMonth = now.getMonth();
+    const todayYear = now.getFullYear();
+
+    // 上月尾部
+    const prevM = month === 0 ? 11 : month - 1;
+    const prevY = month === 0 ? year - 1 : year;
+    for (let i = startWeekday - 1; i >= 0; i--) {
+      const d = daysInPrevMonth - i;
+      appendDay(d, true, false, dateKey(prevY, prevM, d));
+    }
+
+    // 本月
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isToday = d === todayDate && month === todayMonth && year === todayYear;
+      const dayOfWeek = (startWeekday + d - 1) % 7;
+      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+      appendDay(d, false, isToday, isWeekend, dateKey(year, month, d));
+    }
+
+    // 下月头部（补满6行 = 42格）
+    const totalCells = startWeekday + daysInMonth;
+    const rows = totalCells <= 35 ? 35 : 42;
+    const remaining = rows - totalCells;
+    const nextM = month === 11 ? 0 : month + 1;
+    const nextY = month === 11 ? year + 1 : year;
+    for (let d = 1; d <= remaining; d++) {
+      appendDay(d, true, false, dateKey(nextY, nextM, d));
+    }
+  }
+
+  function appendDay(num, isOther, isToday, isWeekend, key) {
+    const el = document.createElement('div');
+    el.className = 'day';
+    el.dataset.key = key;
+    if (isOther) el.classList.add('other-month');
+    if (isToday) el.classList.add('today');
+    if (isWeekend && !isOther && !isToday) el.classList.add('weekend');
+    if (selectedKey === key) el.classList.add('selected');
+    el.textContent = num;
+    el.addEventListener('click', () => {
+      if (selectedKey === key) {
+        selectedKey = null;
+      } else {
+        selectedKey = key;
+      }
+      render();
+    });
+    daysEl.appendChild(el);
+  }
+
+  document.getElementById('prev').addEventListener('click', () => {
+    month--;
+    if (month < 0) { month = 11; year--; }
+    render();
+  });
+
+  document.getElementById('next').addEventListener('click', () => {
+    month++;
+    if (month > 11) { month = 0; year++; }
+    render();
+  });
+
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    year = now.getFullYear();
+    month = now.getMonth();
+    selectedKey = dateKey(year, month, now.getDate());
+    render();
+  });
+
+  renderWeekdays();
+  render();
+</script>
+</body>
+</html>

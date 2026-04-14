@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #fff;
+    user-select: none;
+  }
+
+  .carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* 幻灯片轨道 */
+  .track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .slide {
+    min-width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: clamp(12px, 4vw, 24px);
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* 幻灯片文字覆盖层 */
+  .slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 40%, rgba(0,0,0,0.5));
+  }
+
+  .slide-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .slide-title {
+    font-size: clamp(14px, 4vw, 22px);
+    font-weight: 600;
+    margin-bottom: clamp(2px, 0.5vh, 6px);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .slide-desc {
+    font-size: clamp(11px, 2.5vw, 14px);
+    opacity: 0.85;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  /* 切换箭头 */
+  .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: clamp(24px, 6vw, 36px);
+    height: clamp(24px, 6vw, 36px);
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.25s, background 0.15s;
+  }
+
+  .carousel:hover .arrow {
+    opacity: 1;
+  }
+
+  .arrow:hover {
+    background: rgba(0,0,0,0.55);
+  }
+
+  .arrow svg {
+    width: 50%;
+    height: 50%;
+  }
+
+  .arrow-prev { left: clamp(6px, 2vw, 12px); }
+  .arrow-next { right: clamp(6px, 2vw, 12px); }
+
+  /* 圆点指示器 */
+  .dots {
+    position: absolute;
+    bottom: clamp(8px, 2vh, 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    gap: clamp(4px, 1vw, 8px);
+  }
+
+  .dot {
+    width: clamp(6px, 1.5vw, 8px);
+    height: clamp(6px, 1.5vw, 8px);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 0;
+  }
+
+  .dot.active {
+    background: #fff;
+    width: clamp(16px, 4vw, 24px);
+    border-radius: 4px;
+  }
+
+  /* 序号标签 */
+  .counter {
+    position: absolute;
+    top: clamp(6px, 2vw, 12px);
+    right: clamp(6px, 2vw, 12px);
+    z-index: 2;
+    font-size: clamp(10px, 2vw, 12px);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    padding: clamp(2px, 0.5vh, 4px) clamp(6px, 1.5vw, 10px);
+    border-radius: 10px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+  <div class="carousel" id="carousel">
+    <div class="track" id="track"></div>
+
+    <button class="arrow arrow-prev" id="prevBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <button class="arrow arrow-next" id="nextBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 6 15 12 9 18"/>
+      </svg>
+    </button>
+
+    <div class="dots" id="dots"></div>
+    <div class="counter" id="counter"></div>
+  </div>
+
+<script>
+  const SLIDES = [
+    {
+      bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      title: '山川湖海',
+      desc: '每一处风景都值得驻足'
+    },
+    {
+      bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      title: '城市光影',
+      desc: '霓虹闪烁间的都市故事'
+    },
+    {
+      bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      title: '碧海蓝天',
+      desc: '海风拂面的宁静时刻'
+    },
+    {
+      bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      title: '绿野仙踪',
+      desc: '走进自然的怀抱'
+    },
+    {
+      bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      title: '夕阳余晖',
+      desc: '天边最温柔的色彩'
+    }
+  ];
+
+  let current = 0;
+  let timer = null;
+  const INTERVAL = 4000;
+
+  function init() {
+    const track = document.getElementById('track');
+    const dots = document.getElementById('dots');
+
+    track.innerHTML = SLIDES.map(s => `
+      <div class="slide" style="background-image:${s.bg}">
+        <div class="slide-content">
+          <div class="slide-title">${s.title}</div>
+          <div class="slide-desc">${s.desc}</div>
+        </div>
+      </div>
+    `).join('');
+
+    dots.innerHTML = SLIDES.map((_, i) => `
+      <button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>
+    `).join('');
+
+    updateCounter();
+  }
+
+  function goTo(index) {
+    const len = SLIDES.length;
+    current = ((index % len) + len) % len;
+
+    document.getElementById('track').style.transform = `translateX(-${current * 100}%)`;
+
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+
+    updateCounter();
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  function updateCounter() {
+    document.getElementById('counter').textContent = `${current + 1} / ${SLIDES.length}`;
+  }
+
+  function startAuto() {
+    stopAuto();
+    timer = setInterval(next, INTERVAL);
+  }
+
+  function stopAuto() {
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  // 事件绑定
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    prev();
+    startAuto();
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    next();
+    startAuto();
+  });
+
+  document.getElementById('dots').addEventListener('click', e => {
+    const dot = e.target.closest('.dot');
+    if (!dot) return;
+    goTo(Number(dot.dataset.index));
+    startAuto();
+  });
+
+  // Hover 暂停自动播放
+  const carousel = document.getElementById('carousel');
+  carousel.addEventListener('mouseenter', stopAuto);
+  carousel.addEventListener('mouseleave', startAuto);
+
+  // 触摸滑动支持
+  let touchStartX = 0;
+  carousel.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    stopAuto();
+  }, { passive: true });
+
+  carousel.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 30) {
+      dx > 0 ? prev() : next();
+    }
+    startAuto();
+  }, { passive: true });
+
+  // 页面卸载清理
+  window.addEventListener('beforeunload', stopAuto);
+
+  // 初始化
+  init();
+  startAuto();
+</script>
+</body>
+</html>
