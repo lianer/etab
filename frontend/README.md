@@ -24,6 +24,13 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
+### `npm run build:extension`
+
+Builds the app for production and copies a Chrome extension manifest to `build/manifest.json`.\
+After running this command, you can load the extension in Chrome from the `frontend/build` folder.
+
+This extension is configured as a new tab replacement, so opening a new tab in Chrome will show the eTab dashboard.
+
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 

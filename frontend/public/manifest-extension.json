@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "eTab",
+  "description": "A Chrome extension that replaces the new tab page with the eTab dashboard.",
+  "version": "1.0.0",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "icons": {
+    "16": "favicon.ico",
+    "48": "logo192.png",
+    "128": "logo512.png"
+  }
+}
