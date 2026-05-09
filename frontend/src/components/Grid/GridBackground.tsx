@@ -1,20 +1,18 @@
 import React, { useMemo } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
-import { GRID_COLS, GRID_MAX_ROWS, GRID_TOTAL_WIDTH, GRID_MAX_HEIGHT, GRID_UNIT, gridCellsToPixels } from '../../utils/gridUtils';
+import { GRID_COLS, GRID_TOTAL_WIDTH, GRID_UNIT, getGridHeight } from '../../utils/gridUtils';
 import styles from './GridBackground.module.css';
 
 const GridBackground: React.FC = () => {
   const { state } = useDashboard();
 
-  // 动态计算网格高度
+  // 动态计算网格高度，会在拖拽时向下扩充 10 行
   const gridHeight = useMemo(() => {
-    if (state.cards.length === 0) return GRID_MAX_HEIGHT;
-    const maxBottom = state.cards.reduce((max, card) => {
-      const bottom = gridCellsToPixels(card.gridWidth, card.gridY + card.gridHeight).height;
-      return Math.max(max, bottom);
-    }, 0);
-    return Math.max(maxBottom + GRID_UNIT, window.innerHeight);
-  }, [state.cards]);
+    if (state.cards.length === 0 && !state.isDragging) {
+      return window.innerHeight;
+    }
+    return getGridHeight(state.cards, state.isDragging);
+  }, [state.cards, state.isDragging]);
 
   const showLines = state.isDragging;
 
@@ -36,7 +34,7 @@ const GridBackground: React.FC = () => {
       className={`${styles.gridBackground} ${showLines ? styles.visible : ''}`}
       style={{
         width: GRID_TOTAL_WIDTH,
-        height: Math.min(gridHeight, GRID_MAX_HEIGHT),
+        height: gridHeight,
       }}
     >
       {verticalLines.map(i => (

@@ -78,6 +78,13 @@ describe('gridUtils', () => {
         row: GRID_MAX_ROWS - 2,
       });
     });
+
+    it('respects a dynamic row limit during drag', () => {
+      expect(clampToGrid(GRID_COLS, GRID_MAX_ROWS + 5, 2, 2, GRID_MAX_ROWS + 10)).toEqual({
+        col: GRID_COLS - 2,
+        row: GRID_MAX_ROWS + 5,
+      });
+    });
   });
 
   describe('cardsOverlap', () => {

@@ -4,6 +4,7 @@ export const GRID_GAP = 20;
 export const GRID_UNIT = GRID_CELL_SIZE + GRID_GAP; // 100px
 export const GRID_COLS = 12;
 export const GRID_MAX_ROWS = 24;
+export const GRID_DRAG_EXTENSION_ROWS = 10;
 export const GRID_TOTAL_WIDTH = GRID_COLS * GRID_UNIT - GRID_GAP; // 1180px
 export const GRID_MAX_HEIGHT = GRID_MAX_ROWS * GRID_UNIT - GRID_GAP; // 2380px
 
@@ -38,6 +39,35 @@ export function gridCellsToPixels(cellsX: number, cellsY: number): { width: numb
   };
 }
 
+export function getGridMaxRows(isDragging: boolean): number {
+  return GRID_MAX_ROWS + (isDragging ? GRID_DRAG_EXTENSION_ROWS : 0);
+}
+
+export function getGridMaxHeight(isDragging: boolean): number {
+  return getGridMaxRows(isDragging) * GRID_UNIT - GRID_GAP;
+}
+
+export function getGridHeight(
+  cards: { gridWidth: number; gridY: number; gridHeight: number }[],
+  isDragging: boolean,
+  viewportHeight: number = typeof window !== 'undefined' ? window.innerHeight : GRID_MAX_HEIGHT,
+): number {
+  if (cards.length === 0) {
+    const baseHeight = Math.max(viewportHeight, GRID_UNIT);
+    const requestedHeight = isDragging ? baseHeight + GRID_DRAG_EXTENSION_ROWS * GRID_UNIT : baseHeight;
+    return requestedHeight;
+  }
+
+  const maxBottom = cards.reduce((max, card) => {
+    const bottom = gridCellsToPixels(card.gridWidth, card.gridY + card.gridHeight).height;
+    return Math.max(max, bottom);
+  }, 0);
+
+  const baseHeight = Math.max(maxBottom + GRID_UNIT, viewportHeight);
+  const requestedHeight = isDragging ? Math.max(baseHeight, viewportHeight + GRID_DRAG_EXTENSION_ROWS * GRID_UNIT) : baseHeight;
+  return requestedHeight;
+}
+
 /**
  * Snap pixel position to nearest grid boundary
  */
@@ -67,10 +97,11 @@ export function clampToGrid(
   row: number,
   widthCells: number,
   heightCells: number,
+  maxRows: number = GRID_MAX_ROWS,
 ): { col: number; row: number } {
   return {
     col: Math.max(0, Math.min(col, GRID_COLS - widthCells)),
-    row: Math.max(0, Math.min(row, GRID_MAX_ROWS - heightCells)),
+    row: Math.max(0, Math.min(row, maxRows - heightCells)),
   };
 }
 

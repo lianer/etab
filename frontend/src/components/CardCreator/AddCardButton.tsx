@@ -33,6 +33,7 @@ const AddCardButton: React.FC = () => {
       cardType,
       cardConfig: cardType === 'clock' ? { is24Hour: true } : {},
       customCode,
+      immersiveTitle: true,
     };
     addCard(newCard);
     setShowDialog(false);
